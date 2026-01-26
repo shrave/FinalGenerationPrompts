@@ -1,6 +1,7 @@
 USER_PROMPT_TEMPLATE = """Write a self-contained JUnit test for the target method: {source_method} in the provided CLIENT CODE (path: {client_rel_path}). The test must check whether {source_method} is affected by the vulnerability identified as {vulnerable_id} or affected by vulnerable APIs: {vulnerable_api_list}. The vulnerable call path starts at {source_method} and reaches the sink {sink_method}; the full path is provided in CALL PATH.
 
-Construct inputs using the same *semantic payload content* as the provided reference test {test_function_name}, adapted as necessary to match the signature and data types of {source_method} (e.g., ByteBuffer, byte[], files). Do NOT reuse test structure or helpers from the reference test.
+Construct inputs using the same semantic payload content as the provided reference test {test_function_name}, adapted as necessary to match the signature and data types of {source_method} (e.g., ByteBuffer, byte[], files). You MAY reuse reference test logic or helpers where applicable, but the test MUST invoke {source_method} as the entrypoint and must not call {sink_method} directly.
+
 
 VULNERABLE LIBRARY/VERSION (authoritative; do not guess):
 - com.fasterxml.jackson.datatype:jackson-datatype-jsr310 [,2.9.8)
