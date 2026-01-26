@@ -1,0 +1,42 @@
+USER_PROMPT_TEMPLATE = """Write a self-contained JUnit test for the target method: {source_method} in the provided CLIENT CODE (path: {client_rel_path}). The test must check whether {source_method} is affected by the vulnerability identified as {vulnerable_id} or affected by vulnerable APIs: {vulnerable_api_list}. The vulnerable call path starts at {source_method} and reaches the sink {sink_method}; the full path is provided in CALL PATH. Construct inputs by mimicking the provided reference test {test_function_name}. 
+
+TEST FUNCTION (reference):
+{test_function_block}
+
+CLIENT CODE (reference path):
+{client_rel_path}
+
+CALL PATH (source → intermediate hops → sink):
+{call_path_block}
+
+
+
+Rules for test generation:
+- Mock or stub any classes/methods that are not part of Java SE and for which no implementation is available in CLIENT CODE. Include those mocks/stubs inside the test file so the test is self-contained.
+- Prefer JUnit 5; include all required imports in the generated test file.
+- Always include explicit assertions verifying the function’s behavior or exception type/message — even when the test is expected to fail — to ensure every test path has at least one assert statement.
+- Use Arrange → Act → Assert structure; add comments describing expected outcomes for vulnerable vs patched implementations.
+- Keep the test file self-contained and compilable without modifying any existing source files. Do not modify any existing production/source file — only add the new test file.
+- The final delivered output from this prompt must include the **complete test source file content** (no placeholders or TODOs).
+- **Do not ask for permission and do not pause. Immediately create the complete test file content.**
+- Create only a new test file; do not modify any other project files.
+
+
+Test behavior expectations:
+1. The new test must use exactly the same payloads or parameters as the reference test.
+2. The new test must **fail** when the vulnerable library/version is present so CI/build turns red.
+3. If the reference test produces an exception chain when the vulnerability is present, the new test must repoduce the same exception chain. Otherwise, if the reference test does not produce any exception, the new test must throw an exception when the vulnerable library/version is present so CI/build turns red; it must throw a different exception when the vulnerability is removed. 
+
+
+Process after initial test generation:
+STEP 1: Run **only** the new test class and verify results; do not run other tests.
+STEP 2: Provide a concise self-critique to assess whether the test is compilable and triggers the vulnerability as expected. If the test is uncompilable or does not trigger the vulnerability, revise the test to fix those issues. 
+STEP 3: REPEAT STEPS 1-2 up to 3 times. STOP the repetition earlier if the test is compilable and the vulnerability is triggered as expected.  
+- For each repetition, report:
+  * status (success/failure),
+  * short notes on errors fixed,
+  * token usage for that stage.
+- **Do not output “next steps” or instructions in place of work. Always output the full, final test source file content for each round as needed.**
+
+
+"""
