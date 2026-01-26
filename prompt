@@ -1,26 +1,18 @@
 USER_PROMPT_TEMPLATE = """Write a self-contained JUnit test for the target method: {source_method} in the provided CLIENT CODE (path: {client_rel_path}). The test must check whether {source_method} is affected by the vulnerability identified as {vulnerable_id} or affected by vulnerable APIs: {vulnerable_api_list}. The vulnerable call path starts at {source_method} and reaches the sink {sink_method}; the full path is provided in CALL PATH.
 
-
 Construct inputs using the same semantic payload content as the provided reference test {test_function_name}, adapted as necessary to match the signature and data types of {source_method}. You may reuse only the reference test code provided in TEST FUNCTION below; do not import, read, or reference any other test files or utilities from the repository. The test MUST invoke {source_method} as the entrypoint and must not call {sink_method} directly.
-
 
 VULNERABLE LIBRARY/VERSION (authoritative; do not guess):
 {vulnerable_library_version}
 
-
 TEST FUNCTION (reference — semantic behavior oracle):
 {test_function_block}
-
 
 CLIENT CODE (reference path):
 {client_rel_path}
 
-
 CALL PATH (source → intermediate hops → sink):
 {call_path_block}
-
-
-
 
 
 
@@ -30,20 +22,18 @@ Rules for test generation:
 - Skip any checksum, hash, or signature verification requirements during test generation and execution (e.g., SHA-1/SHA-256, file integrity checks); such checks must not prevent the vulnerability from being exercised.
 - Use the test framework already configured in the repository (JUnit 4 vs JUnit 5); prefer JUnit 5 only if it is already configured.
 - The generated test MUST be discoverable and executable by the repository’s existing test runner without manual intervention:
- * If Maven is used, ensure Surefire-compatible test discovery (e.g., class name ends with *Test, correct package under src/test/java).
- * If Gradle is used, ensure Gradle test discovery works with the configured test framework.
+  * If Maven is used, ensure Surefire-compatible test discovery (e.g., class name ends with *Test, correct package under src/test/java).
+  * If Gradle is used, ensure Gradle test discovery works with the configured test framework.
 - Always include explicit assertions verifying runtime behavior (exception type, message substring, causal chain, return value, or observable side effect).
 - Use Arrange → Act → Assert structure; add comments explaining how the observed behavior corresponds to the reference test.
 - Keep the test file self-contained and compilable without modifying any existing production/source files.
 - If required to make the test compile or execute successfully, you may apply minimal build-system fixes (pom.xml / build.gradle test configuration), but you must NOT change the vulnerable library/version specified above under any circumstances (and do not change other dependency/library versions). If build changes are necessary, output them as a unified diff in addition to the full test file.
 - Explicitly state the vulnerable library and version in comments in the test file. Use the VULNERABLE LIBRARY/VERSION line above as authoritative; do not speculate.
 
-
 Test independence requirements:
 - Treat all files under src/test/java/** and any previously generated tests as nonexistent.
 - Do NOT read, reference, adapt, or pattern-match any existing test files, test utilities, base test classes, or helper methods.
 - The generated test must be logically independent and self-contained, even if other tests exercise similar logic.
-
 
 Test data and payload requirements:
 - Construct all required payloads, inputs, or artifacts programmatically within the test.
@@ -51,29 +41,20 @@ Test data and payload requirements:
 - If the test requires files (e.g., JSON files, ZIP archives, binary payloads), create them at runtime using temporary directories or in-memory buffers.
 
 
-
-
 Test behavior expectations (REFERENCE-DRIVEN):
 1. The new test must use the same semantic payload content as the reference test, adapted as needed to match the entrypoint and data types of {source_method}.
 
-
 2. The reference test defines the behavioral oracle. The new test must align its expectations with how the reference test behaves under vulnerable conditions.
 
-
 3. If the reference test produces an exception chain when the vulnerability is present, the new test must reproduce the same exception chain as closely as feasible, at minimum:
-  - the same top-level exception type, and
-  - a stable, distinguishing substring in the exception message or causal chain.
-
+   - the same top-level exception type, and
+   - a stable, distinguishing substring in the exception message or causal chain.
 
 4. If the reference test does not produce any exception, the new test must throw an exception when the vulnerable library/version is present so CI/build turns red, and it must throw a different exception (type or distinguishing message/causal difference) when the vulnerability is removed.
 
-
 5. The test outcome must be determined by real library/runtime behavior, not by mocked or simulated outcomes on the vulnerability call path.
 
-
 6. Avoid brittle exact-match assertions on exception messages unless the message is guaranteed stable; prefer exception types, causal relationships, and stable substrings (contains) where appropriate.
-
-
 
 
 Process after initial test generation:
@@ -81,13 +62,11 @@ STEP 0: Determine the correct build root and test runner by inspecting repositor
 - If Maven: locate the nearest pom.xml for the module that contains {client_rel_path} and run commands from that directory.
 - If Gradle: locate settings.gradle(.kts) / build.gradle(.kts) for the module that contains {client_rel_path} and run commands from that directory.
 
-
 STEP 1: Run only the new test class and observe runtime behavior; do not run other tests.
 - If Maven is used, run only the new test via Maven Surefire using a local repo under the build root:
- mvn -q -Dmaven.repo.local=<BUILD_ROOT>/.mvn_local -Dtest=<NewTestClassName> test
+  mvn -q -Dmaven.repo.local=<BUILD_ROOT>/.mvn_local -Dtest=<NewTestClassName> test
 - If Gradle is used, run only the new test via Gradle test task using a local Gradle user home:
- GRADLE_USER_HOME=<BUILD_ROOT>/.gradle_local ./gradlew test --tests <package.NewTestClassName>
-
+  GRADLE_USER_HOME=<BUILD_ROOT>/.gradle_local ./gradlew test --tests <package.NewTestClassName>
 
 STEP 2: Provide a concise self-critique assessing:
 - whether the test is compilable,
@@ -95,16 +74,12 @@ STEP 2: Provide a concise self-critique assessing:
 - whether its observed behavior correctly mirrors the reference oracle.
 If not, revise the test (and only minimal build config if required) to fix those issues.
 
-
 STEP 3: REPEAT STEPS 1–2 up to 3 times. STOP earlier if the test is compilable, discovered, and its behavior is aligned with the reference oracle.
 - For each repetition, report:
- * status (success/failure),
- * short notes on errors fixed,
- * the selected runner command and why it was selected (Maven/Gradle, module root).
+  * status (success/failure),
+  * short notes on errors fixed,
+  * the selected runner command and why it was selected (Maven/Gradle, module root).
 - Do NOT fabricate logs. If execution cannot be performed due to environment restrictions, clearly state what prevented execution and limit claims accordingly.
 - Do not output “next steps” or instructions in place of work. Always output the full, final test source file content for each round as needed.
 
-
 """
-
-
