@@ -1,0 +1,31 @@
+CALL_PATH_PROMPT_TEMPLATE = """You’re in the project workspace. Find every call path whose final hop is the sink method {sink_method}. Execute the analysis; do not restate or summarize these instructions.
+
+Steps:
+1. Use repo analysis tools (rg/grep, build tooling, existing scripts, etc.) to locate every invocation of the sink.
+2. For each invocation, walk outward to the first public method in this project that reaches the sink exclusively through non-public intermediaries. Reject any path that passes through another qualifying source.
+3. Verify the source belongs to this project, is public, and no other public methods appear between source and sink.
+
+For each call chain, emit. After every method line (including the sink), immediately print a new line with the file path and line range in the form `(path/to/File.java:start–end)`.
+
+----- CALL CHAIN START -----
+Source: <fully qualified source signature>
+<fully qualified source signature>
+(<relative/path/File.java:start–end>)
+    ↓
+<next hop>
+(<relative/path/File.java:start–end>)
+...
+    ↓
+<{sink_method}> // sink
+(<relative/path/File.java:start–end>)
+----- CALL CHAIN END -----
+
+If no qualifying paths exist, output:
+
+----- CALL CHAIN START -----
+Source: none
+No qualifying call paths found (summarize how you searched).
+----- CALL CHAIN END -----
+
+Insert the Unicode arrow line between each hop exactly as shown. Keep separator lines verbatim.
+"""
