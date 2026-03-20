@@ -1,0 +1,13 @@
+Decide if the logs show that the vulnerability is being triggered or
+that vulnerable behavior is exhibited based on this test file.
+- Answer `"yes"` if the targeted security test failed, threw an
+exception, or any downstream build/test step failed.
+  - Answer `"no"` if the targeted test passed and the build succeeded.
+  - Answer `"unknown"` if the log is inconclusive.
+
+Respond with strict JSON in the form:
+{
+"triggered": "yes|no|unknown",
+"confidence": "low|medium|high",
+"reasoning": "short explanation referencing log evidence"
+}
